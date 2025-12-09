@@ -1,3 +1,4 @@
+// Use same origin as the site
 const API_BASE = window.location.origin;
 
 const tempEl = document.getElementById('temp');
@@ -27,16 +28,16 @@ function addHistoryRow(reading, prepend = true) {
   }
 }
 
-// History
+// Load history on page load
 fetch(`${API_BASE}/api/readings?limit=20`)
   .then(res => res.json())
   .then(data => {
-    data.reverse().forEach(r => addHistoryRow(r, false));
+    data.reverse().forEach(r => addHistoryRow(r, false)); // oldest first
     if (data.length > 0) renderCurrent(data[data.length - 1]);
   })
   .catch(err => console.error('Failed to load history:', err));
 
-// WebSocket
+// WebSocket for live updates
 let ws;
 function connectWS() {
   statusEl.textContent = 'Connecting...';
@@ -55,7 +56,9 @@ function connectWS() {
     const msg = JSON.parse(evt.data);
     if (msg.type === 'latest-reading' || msg.type === 'new-reading') {
       renderCurrent(msg.data);
-      if (msg.type === 'new-reading') addHistoryRow(msg.data, true);
+      if (msg.type === 'new-reading') {
+        addHistoryRow(msg.data, true);
+      }
     }
   };
 
@@ -65,8 +68,9 @@ function connectWS() {
     setTimeout(connectWS, 3000);
   };
 
-  ws.onerror = () => ws.close();
+  ws.onerror = () => {
+    ws.close();
+  };
 }
 
 connectWS();
-

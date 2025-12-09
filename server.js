@@ -6,14 +6,14 @@ const sqlite3 = require('sqlite3').verbose();
 const axios = require('axios');
 const cors = require('cors');
 
-// Read from environment variable (set this on Render dashboard)
+// Discord webhook from Render environment variables
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Serve static files from /public
+// Serve static files (frontend) from /public
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- SQLite setup ---
@@ -34,7 +34,7 @@ db.serialize(() => {
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-// Broadcast helper
+// Helper to broadcast JSON to all WebSocket clients
 function broadcastJSON(obj) {
   const msg = JSON.stringify(obj);
   wss.clients.forEach(client => {
@@ -44,10 +44,9 @@ function broadcastJSON(obj) {
   });
 }
 
-// Discord webhook
+// Discord notification
 async function sendDiscordNotification(temp, hum) {
   if (!DISCORD_WEBHOOK_URL) return;
-
   const content = `🌡️ New reading: **${temp.toFixed(1)}°C**, 💧 **${hum.toFixed(1)}%**`;
 
   try {
@@ -85,7 +84,7 @@ app.post('/api/readings', (req, res) => {
         created_at: createdAt
       };
 
-      // WebSocket
+      // WebSocket clients
       broadcastJSON({ type: 'new-reading', data: reading });
       // Discord
       sendDiscordNotification(temperature, humidity);
@@ -95,7 +94,7 @@ app.post('/api/readings', (req, res) => {
   );
 });
 
-// History
+// Get recent readings
 app.get('/api/readings', (req, res) => {
   const limit = Number(req.query.limit) || 50;
 
@@ -112,7 +111,7 @@ app.get('/api/readings', (req, res) => {
   );
 });
 
-// Latest
+// Get latest reading
 app.get('/api/readings/latest', (req, res) => {
   db.get(
     'SELECT * FROM readings ORDER BY created_at DESC LIMIT 1',
@@ -128,10 +127,11 @@ app.get('/api/readings/latest', (req, res) => {
   );
 });
 
-// WebSocket
+// WebSocket connections
 wss.on('connection', ws => {
   console.log('WebSocket client connected');
 
+  // Send latest reading immediately (if exists)
   db.get(
     'SELECT * FROM readings ORDER BY created_at DESC LIMIT 1',
     [],
@@ -147,7 +147,6 @@ wss.on('connection', ws => {
   });
 });
 
-// Port from Render or 3000 locally
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
