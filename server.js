@@ -7,6 +7,7 @@ const axios = require('axios');
 const cors = require('cors');
 
 // Discord webhook from Render environment variables
+// Set this in Render dashboard: DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/..."
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 
 const app = express();
@@ -45,9 +46,19 @@ function broadcastJSON(obj) {
 }
 
 // Discord notification
+// Version A: ONLY send messages when temperature > 30°C
 async function sendDiscordNotification(temp, hum) {
   if (!DISCORD_WEBHOOK_URL) return;
-  const content = `🌡️ New reading: **${temp.toFixed(1)}°C**, 💧 **${hum.toFixed(1)}%**`;
+
+  // Only send alert if temp is above threshold
+  const threshold = 30;
+  if (temp <= threshold) {
+    return; // no message for normal temps
+  }
+
+  const content =
+    `🔥 **HIGH TEMPERATURE ALERT!**\n` +
+    `Current reading: 🌡️ **${temp.toFixed(1)}°C**, 💧 **${hum.toFixed(1)}%**`;
 
   try {
     await axios.post(DISCORD_WEBHOOK_URL, { content });
@@ -84,9 +95,9 @@ app.post('/api/readings', (req, res) => {
         created_at: createdAt
       };
 
-      // WebSocket clients
+      // WebSocket clients (frontend live update)
       broadcastJSON({ type: 'new-reading', data: reading });
-      // Discord
+      // Discord alert (only if temp > 30°C)
       sendDiscordNotification(temperature, humidity);
 
       res.status(201).json(reading);
@@ -147,6 +158,7 @@ wss.on('connection', ws => {
   });
 });
 
+// Use Render's PORT or 3000 locally
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
