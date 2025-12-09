@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Weather Station Dashboard</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f7f7f7;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    .current {
+      border: 1px solid #ccc;
+      background: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      display: inline-block;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .label {
+      font-weight: bold;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 700px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background: #eee;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    #status {
+      font-weight: bold;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Weather Station Dashboard 🌤️</h1>
+  <p>Live temperature and humidity from Wokwi</p>
+
+  <div class="current">
+    <h2>Current Reading</h2>
+    <p><span class="label">Temperature:</span> <span id="temp">--</span> °C</p>
+    <p><span class="label">Humidity:</span> <span id="hum">--</span> %</p>
+    <p><span class="label">Time:</span> <span id="time">--</span></p>
+    <p><span class="label">WebSocket Status:</span> <span id="status">Connecting...</span></p>
+  </div>
+
+  <h2>Recent Readings</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Temperature (°C)</th>
+        <th>Humidity (%)</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody id="history-body">
+      <!-- JS fills data here -->
+    </tbody>
+  </table>
+
+  <script src="script.js"></script>
+</body>
+</html>
